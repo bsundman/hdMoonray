@@ -144,6 +144,18 @@ ValueConverter::setAttribute(SceneObject* sceneObj, const Attribute* attribute, 
                 key = &(val.UncheckedGet<pxr::TfToken>().GetString());
             } else if (val.IsHolding<std::string>()) {
                 key = &(val.UncheckedGet<std::string>());
+            } else if (val.IsHolding<long long>()) {
+                // Houdini 21 passes integers as long long
+                const int intVal = static_cast<int>(val.UncheckedGet<long long>());
+                int index = 0;
+                for (auto it = attribute->beginEnumValues(); it != attribute->endEnumValues(); ++it) {
+                    if (index == intVal) {
+                        sceneObj->set(AttributeKey<Int>(*attribute), it->first);
+                        return;
+                    }
+                    ++index;
+                }
+                break;
             } else if (val.IsHolding<long>() || val.IsHolding<int>()) {
                 const int intVal = val.IsHolding<long>() ?
                                    static_cast<int>(val.UncheckedGet<long>()) :
@@ -170,7 +182,11 @@ ValueConverter::setAttribute(SceneObject* sceneObj, const Attribute* attribute, 
             Logger::error(sceneObj->getName(), '.', attribute->getName(),
                           ": Invalid enum key '", *key, "'");
             return;
-        } else  if (val.IsHolding<long>()) {
+        } else if (val.IsHolding<long long>()) {
+            // Houdini 21 passes integers as long long
+            sceneObj->set(AttributeKey<Int>(*attribute), static_cast<int>(val.UncheckedGet<long long>()));
+            return;
+        } else if (val.IsHolding<long>()) {
             sceneObj->set(AttributeKey<Int>(*attribute), static_cast<int>(val.UncheckedGet<long>()));
             return;
         } else {
@@ -183,6 +199,11 @@ ValueConverter::setAttribute(SceneObject* sceneObj, const Attribute* attribute, 
     case TYPE_FLOAT:
         if (val.IsHolding<int>()) {
             const float floatVal = static_cast<float>(val.UncheckedGet<int>());
+            sceneObj->set(AttributeKey<Float>(*attribute), floatVal);
+            return;
+        } else if (val.IsHolding<long long>()) {
+            // Houdini 21 passes integers as long long
+            const float floatVal = static_cast<float>(val.UncheckedGet<long long>());
             sceneObj->set(AttributeKey<Float>(*attribute), floatVal);
             return;
         } else if (val.IsHolding<long>()) {

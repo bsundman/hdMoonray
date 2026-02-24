@@ -366,9 +366,21 @@ Light::Sync(pxr::HdSceneDelegate *sceneDelegate,
     // HDM-125: usdview sets the intensity of lights to 0.0f if "Enable Scene Lights" is turned off,
     // so treat intensity=0 as turning off the light. Also turn it off when lighting disabled.
     float intensity = 0.0f;
+    bool moonrayIntensityOverride = false;
     if (not renderDelegate.getDisableLighting() && sceneDelegate->GetVisible(id)) {
-        pxr::VtValue val = sceneDelegate->GetLightParamValue(id, pxr::HdLightTokens->intensity);
-        intensity = val.IsHolding<float>() ? val.UncheckedGet<float>() : 1.0f;
+        // Check for moonray:intensity override first (Houdini MoonRay tab)
+        pxr::VtValue mrVal = sceneDelegate->GetLightParamValue(id, pxr::TfToken("moonray:intensity"));
+        if (mrVal.IsHolding<float>()) {
+            intensity = mrVal.UncheckedGet<float>();
+            moonrayIntensityOverride = true;
+        } else if (mrVal.IsHolding<double>()) {
+            intensity = static_cast<float>(mrVal.UncheckedGet<double>());
+            moonrayIntensityOverride = true;
+        } else {
+            // Fall back to standard USD inputs:intensity (base Light tab)
+            pxr::VtValue val = sceneDelegate->GetLightParamValue(id, pxr::HdLightTokens->intensity);
+            intensity = val.IsHolding<float>() ? val.UncheckedGet<float>() : 1.0f;
+        }
     }
 
     bool initialize = false;
