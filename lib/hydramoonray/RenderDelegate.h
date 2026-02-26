@@ -370,10 +370,6 @@ private:
     // Deferred dirty flags applied in CommitResources()
     bool mPendingCategoryUpdate = false;
 
-    // Tracks HdChangeTracker::GetSceneStateVersion() to detect any external
-    // scene change that should trigger re-syncing of all lights.
-    unsigned mPreviousSceneVersion = 0;
-
     pxr::UsdImagingDelegate* mUsdImagingDelegate = nullptr;
 };
 

@@ -363,8 +363,8 @@ Light::Sync(pxr::HdSceneDelegate *sceneDelegate,
 
     RenderDelegate& renderDelegate(RenderDelegate::get(renderParam));
 
-    // Cache the scene delegate so CommitResources() can check its version
-    // to detect parameter changes (including moonray:* custom properties).
+    // Cache the UsdImagingDelegate (when running outside Houdini) so that
+    // RenderPass can retrieve the current time code for motion blur.
     renderDelegate.setSceneDelegate(sceneDelegate);
 
     // HDM-125: usdview sets the intensity of lights to 0.0f if "Enable Scene Lights" is turned off,
