@@ -109,7 +109,42 @@ RenderDelegate::~RenderDelegate()
 }
 
 void
-RenderDelegate::CommitResources(pxr::HdChangeTracker *tracker) {}
+RenderDelegate::CommitResources(pxr::HdChangeTracker *tracker)
+{
+    // Detect any external scene change by watching HdChangeTracker's scene
+    // state version.  This version increments whenever any Hydra prim is
+    // marked dirty — including when Houdini processes LOP parameter changes
+    // that affect custom moonray:* attributes.
+    //
+    // We save the version AFTER our own MarkSprimDirty calls so those
+    // increments don't re-trigger the check on the next frame.
+    unsigned v = tracker->GetSceneStateVersion();
+    if (v != mPreviousSceneVersion) {
+        for (auto& light : mLights) {
+            tracker->MarkSprimDirty(light->GetId(),
+                pxr::HdLight::DirtyParams | pxr::HdLight::DirtyTransform);
+        }
+    }
+
+    // Deferred MarkAllRprimsDirty for light category changes.
+    //
+    // When a light type changes (e.g. point→sphere), Light::Sync() previously
+    // called MarkAllRprimsDirty() directly during sprim sync.  Hydra collects
+    // the rprim dirty list before sprim sync runs, so those bits arrived too
+    // late — geometry kept its stale LightSet and went black.  Light::Sync()
+    // now calls setPendingCategoryUpdate() instead and we apply the dirty
+    // marking here so it takes effect on the next Execute cycle.
+    if (mPendingCategoryUpdate) {
+        mPendingCategoryUpdate = false;
+        tracker->MarkAllRprimsDirty(
+            pxr::HdChangeTracker::DirtyCategories |
+            pxr::HdChangeTracker::DirtyMaterialId);
+    }
+
+    // Save version AFTER all our markings so our own dirty-bit increments
+    // are included and don't re-fire the check next frame.
+    mPreviousSceneVersion = tracker->GetSceneStateVersion();
+}
 
 #if PXR_VERSION >= 2108
 pxr::HdCommandDescriptors RenderDelegate::GetCommandDescriptors() const

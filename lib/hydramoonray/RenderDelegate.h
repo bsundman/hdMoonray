@@ -288,6 +288,11 @@ public:
     void setPruneVolume(bool v);
     void setForcePolygon(bool v);
     void setIsHoudini(bool v) { mIsHoudini = v; }
+
+    // Request that all rprims be dirtied on the next CommitResources() call.
+    // Used to defer MarkAllRprimsDirty out of Light::Sync() so it fires after
+    // all sprim sync is done (fixes light-type-change LightSet staleness).
+    void setPendingCategoryUpdate() { mPendingCategoryUpdate = true; }
     void setDisableRender(bool v) {mDisableRender = v;}
     bool getDisableRender() {return mDisableRender;}
     void setDeepIdAttrName(std::string attrName) {mDeepIdAttrName = attrName;}
@@ -361,6 +366,13 @@ private:
     std::set<pxr::HdRprim*> mProcedurals;
     std::set<pxr::HdRprim*> mVolumes;
     void setDefaultLight(bool);
+
+    // Deferred dirty flags applied in CommitResources()
+    bool mPendingCategoryUpdate = false;
+
+    // Tracks HdChangeTracker::GetSceneStateVersion() to detect any external
+    // scene change that should trigger re-syncing of all lights.
+    unsigned mPreviousSceneVersion = 0;
 
     pxr::UsdImagingDelegate* mUsdImagingDelegate = nullptr;
 };

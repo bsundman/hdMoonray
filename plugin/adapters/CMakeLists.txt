@@ -21,6 +21,7 @@ target_sources(${component}
     PRIVATE
         MoonrayMeshLightAdapter.cc
         MoonrayLightFilterAdapter.cc
+        MoonrayLightAdapters.cc
         ${DwaSpecificSources}
 )
 

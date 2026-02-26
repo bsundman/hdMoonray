@@ -20,6 +20,42 @@
                             "UsdImagingGprimAdapter"
                         ],
                         "primTypeName": "Procedural"
+                    },
+                    "MoonraySphereLightAdapter": {
+                        "bases": [
+                            "UsdImagingSphereLightAdapter"
+                        ],
+                        "primTypeName": "SphereLight"
+                    },
+                    "MoonrayRectLightAdapter": {
+                        "bases": [
+                            "UsdImagingRectLightAdapter"
+                        ],
+                        "primTypeName": "RectLight"
+                    },
+                    "MoonrayDiskLightAdapter": {
+                        "bases": [
+                            "UsdImagingDiskLightAdapter"
+                        ],
+                        "primTypeName": "DiskLight"
+                    },
+                    "MoonrayCylinderLightAdapter": {
+                        "bases": [
+                            "UsdImagingCylinderLightAdapter"
+                        ],
+                        "primTypeName": "CylinderLight"
+                    },
+                    "MoonrayDistantLightAdapter": {
+                        "bases": [
+                            "UsdImagingDistantLightAdapter"
+                        ],
+                        "primTypeName": "DistantLight"
+                    },
+                    "MoonrayDomeLightAdapter": {
+                        "bases": [
+                            "UsdImagingDomeLightAdapter"
+                        ],
+                        "primTypeName": "DomeLight"
                     }
                 }
             },

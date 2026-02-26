@@ -363,6 +363,10 @@ Light::Sync(pxr::HdSceneDelegate *sceneDelegate,
 
     RenderDelegate& renderDelegate(RenderDelegate::get(renderParam));
 
+    // Cache the scene delegate so CommitResources() can check its version
+    // to detect parameter changes (including moonray:* custom properties).
+    renderDelegate.setSceneDelegate(sceneDelegate);
+
     // HDM-125: usdview sets the intensity of lights to 0.0f if "Enable Scene Lights" is turned off,
     // so treat intensity=0 as turning off the light. Also turn it off when lighting disabled.
     float intensity = 0.0f;
@@ -438,12 +442,15 @@ Light::Sync(pxr::HdSceneDelegate *sceneDelegate,
             mShadowLinkCategory = t;
             categoriesChanged = true;
         }
-        // Need to call Sync() on all geometry to get categories copied into LightSets
+        // Need to call Sync() on all geometry to get categories copied into LightSets.
+        // We defer this to RenderDelegate::CommitResources() instead of calling
+        // MarkAllRprimsDirty() here directly.  Calling it during sprim Sync() is
+        // too early: Hydra has already collected the rprim dirty list for this
+        // frame, so the bits would be missed until the next Execute cycle anyway,
+        // but CommitResources() runs after all prim sync and its dirty marks are
+        // guaranteed to be processed on the next cycle.
         if (categoriesChanged) {
-            // in 0.22.5, DirtyCategories seems to be ignored. We can force a sync using
-            // DirtyMaterialId even though it isn't strict;y right...
-            sceneDelegate->GetRenderIndex().GetChangeTracker().MarkAllRprimsDirty(
-                pxr::HdChangeTracker::DirtyCategories | pxr::HdChangeTracker::DirtyMaterialId);
+            renderDelegate.setPendingCategoryUpdate();
         }
     }
 
